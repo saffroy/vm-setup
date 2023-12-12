@@ -66,8 +66,9 @@ else
         TEMPFILE="$(mktemp -p $TMPDIR temp-vm-pid-$$.XXXXXX)"
         exec 8<$TEMPFILE  9<>$TEMPFILE
         # use cheapest compression alg.
+        BACKING_FORMAT="$(qemu-img info $OSDISK |awk '/^file format:/{print $NF}')"
         qemu-img create -f qcow2 -b $(realpath $OSDISK) \
-                 -F qcow2 -o compression_type=zstd $TEMPFILE > /dev/null
+                 -F "${BACKING_FORMAT}" -o compression_type=zstd $TEMPFILE > /dev/null
         rm $TEMPFILE
         # ls -l /dev/fd/{8,9}
 
