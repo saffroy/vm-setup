@@ -111,3 +111,11 @@ In `/etc/hosts`:
 `qemu-img create -f qcow2 -o compression_type=zstd debian.qcow2 20G`
 
 `runvm.sh -w -d debian.qcow2 -- -cdrom debian-12.2.0-amd64-netinst.iso`
+
+### Windows cloud
+
+Search for "Windows 2019 VHD", download a VHD image.
+
+`qemu-img create -f qcow2 -o compression_type=zstd windows-2019.qcow2 -b blah.vhd -F vpc`
+
+`runvm.sh -w -d windows-2019.qcow2 -L -- -m 4096 -smp 2`
