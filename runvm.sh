@@ -8,6 +8,10 @@ export TMPDIR=${TMPDIR:-/scratch-nvme/tmp/}
 MEMORY=1024 # megabytes
 BRIDGE=vmbr0
 
+# guest devices
+NETDEV=virtio-net
+BLOCKDEV=virtio-blk
+
 TOOL=$(basename $0)
 
 usage() {
@@ -15,10 +19,11 @@ usage() {
     echo "	-d <disk image>"
     echo "	-n <instance num>"
     echo "	-w open disk image for write (default is read-only)"
+    echo "	-L use non-virtio devices (legacy mode, for Windows)"
     exit 1
 }
 
-ARGS=$(getopt -o "d:n:w" -- "$@")
+ARGS=$(getopt -o "d:n:wL" -- "$@")
 [ $? = 0 ] || usage
 eval set -- "$ARGS"
 
@@ -27,6 +32,9 @@ while : ; do
         "-d")   OSDISK="$2" ; shift 2 ;;
         "-n")   INSTANCE="$2" ; shift 2 ;;
         "-w")   SNAPSHOT="" ; shift ;;
+        "-L")   NETDEV="e1000"
+                BLOCKDEV="ide-hd"
+                shift ;;
         "--")   shift ; break ;;
         *)      echo "$TOOL: invalid argument '$1'" ; usage ;;
     esac
@@ -51,7 +59,7 @@ MAC=${MAC:-$(printf 'DE:AD:BE:EF:00:%02X' $INSTANCE)}
 # no need to provision tap interfaces with qemu bridge helper
 # see https://wiki.qemu.org/Features/HelperNetworking
 NETOPTS="-netdev id=net0,type=bridge,br=$BRIDGE"
-NETOPTS+=" -device virtio-net,netdev=net0,mac=$MAC"
+NETOPTS+=" -device ${NETDEV},netdev=net0,mac=$MAC"
 
 if false; then
     # the easy way
@@ -78,7 +86,13 @@ else
         DISKOPTS+=" -blockdev node-name=disk0,driver=file,filename=/dev/fdset/2,discard=unmap"
     fi
     DISKOPTS+=" -blockdev node-name=hd0,driver=qcow2,file=disk0,discard=unmap"
-    DISKOPTS+=" -device virtio-blk,drive=hd0"
+    DISKOPTS+=" -device ${BLOCKDEV},drive=hd0,id=ssd0"
+    case "$BLOCKDEV" in
+        "ide-hd")
+            # mark as SSD so OS knows to issue TRIM
+            DISKOPTS+=" -set device.ssd0.rotation_rate=1"
+            ;;
+    esac
 fi
 
 GRAPHOPTS="-vga std"
