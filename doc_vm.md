@@ -8,7 +8,7 @@
 
 ## Configure networking
 
-1. Global bridge interface
+### 1. Global bridge interface
 
 In `/etc/network/interfaces`:
 
@@ -31,22 +31,7 @@ Start it:
 
 `ifup vmbr0`
 
-2. Host interfaces for VMs
-
-Make the qemu bridge helper setuid root:
-```
-chown :kvm /usr/lib/qemu/qemu-bridge-helper
-chmod u+s,o= /usr/lib/qemu/qemu-bridge-helper
-```
-
-In `/etc/qemu/bridge.conf`:
-
-```
-allow vmbr0
-```
-
-
-3. DHCP+DNS
+### 2. DHCP+DNS
 
 In `/etc/default/dnsmasq`:
 
@@ -72,14 +57,14 @@ Start it:
 
 `systemctl restart dnsmasq.service`
 
-4. For Internet access
+### 3. For Internet access
 
 In `/etc/rc.local`, one line per external interface (so, e.g. include
 `wlan0` on a laptop):
 
 `iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE`
 
-5. For easy names
+### 4. For easy names
 
 In `/etc/hosts`:
 
@@ -92,19 +77,33 @@ In `/etc/hosts`:
 
 ## Qemu/KVM
 
-1. Permissions
+### 1. Permissions
+
+Add yourself to the `kvm` group:
 
 `adduser USERNAME kvm`
 
-2. Profit
+Make the qemu bridge helper setuid root:
+```
+chown :kvm /usr/lib/qemu/qemu-bridge-helper
+chmod u+s,o= /usr/lib/qemu/qemu-bridge-helper
+```
 
-### Debian cloud
+In `/etc/qemu/bridge.conf`:
+
+```
+allow vmbr0
+```
+
+### 2. Profit
+
+#### Debian cloud
 
 `wget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-nocloud-amd64.qcow2`
 
 `runvm.sh -d debian-12-nocloud-amd64.qcow2`
 
-### Debian netinst
+#### Debian netinst
 
 `wget https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.2.0-amd64-netinst.iso`
 
@@ -112,7 +111,7 @@ In `/etc/hosts`:
 
 `runvm.sh -w -d debian.qcow2 -- -cdrom debian-12.2.0-amd64-netinst.iso`
 
-### Windows cloud
+#### Windows cloud
 
 Search for "Windows 2019 VHD", download a VHD image.
 
