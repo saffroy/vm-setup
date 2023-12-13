@@ -5,7 +5,7 @@ OSDISK=/scratch-nvme/vm/debian.qcow2
 INSTANCE=1
 SNAPSHOT=-snapshot
 export TMPDIR=${TMPDIR:-/scratch-nvme/tmp/}
-MEMORY=1024 # megabytes
+MEMORY=1G
 BRIDGE=vmbr0
 
 # guest devices
@@ -95,6 +95,7 @@ else
     esac
 fi
 
+MACHINEOPTS="-enable-kvm -machine q35,accel=kvm -cpu host"
 GRAPHOPTS="-vga std"
 #REMOTEOPTS="-vnc none"
 REMOTEOPTS=
@@ -103,9 +104,9 @@ MONITOROPTS="-monitor telnet:localhost:$((2300 + ${INSTANCE})),server,nowait"
 set -x
 
 qemu-system-x86_64 \
-    -name vm${INSTANCE} \
-    -machine accel=kvm \
-    -m $MEMORY -nodefaults \
+    -name vm${INSTANCE} -nodefaults \
+    $MACHINEOPTS \
+    -m $MEMORY \
     $MONITOROPTS \
     $GRAPHOPTS \
     $NETOPTS \
